@@ -34,12 +34,6 @@ RcPwm servo[8];
 
 void main_interrupt(void) {
 	for (int i = 0; i < 8; ++i) {
-		if (received_raw.rx_stdid == CAN_STDID) {
-			received_data[i] = received_raw.rx_data[i];
-		}
-	}
-
-	for (int i = 0; i < 8; ++i) {
 		servo[i].turn(SERVO_MIN_PWM[i] + (SERVO_MAX_PWM[i]-SERVO_MIN_PWM[i])/100*received_data[i]);
 	}
 }
@@ -62,5 +56,10 @@ int main(void)
 	sken_system.addTimerInterruptFunc(main_interrupt, 0, 1);
 
 	while(true) {
+		for (int i = 0; i < 8; ++i) {
+			if (received_raw.rx_stdid == CAN_STDID) {
+				received_data[i] = received_raw.rx_data[i];
+			}
+		}
 	}
 }
