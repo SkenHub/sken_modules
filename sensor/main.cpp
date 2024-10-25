@@ -2,8 +2,8 @@
   ******************************************************************************
   * @file    main.cpp
   * @author  Tikuwa404
-  * @version V1.0
-  * @date    21-October-2024
+  * @version V2.1
+  * @date    25-October-2024
   * @brief   module_sensor function.
   ******************************************************************************
 */
@@ -15,6 +15,11 @@
 #include "sken_library/include.h"
 using namespace std;
 
+enum {
+	SENSOR_0=0x100,SENSOR_1,SENSOR_2,SENSOR_3,SENSOR_4,SENSOR_5,SENSOR_6,SENSOR_7
+};
+
+
 /* Setting */
 /* Measuring tire diameter  */
 constexpr double TIRE_DIAMETER = 100.0;
@@ -22,13 +27,9 @@ constexpr double TIRE_DIAMETER = 100.0;
 /* tire-tire diameter  */
 constexpr double BODY_DIAMETER = 500.0;
 
-/* Encoder data sending can StdID
- *  0x100 ~ 0x107  */
-constexpr uint32_t CAN_ENC_STDID = 0x100;
-
-/* Limit switch data sending can StdID
- *  0x108 ~ 0x10F  */
-constexpr uint32_t CAN_LIMIT_STDID = 0x108;
+/* Module ID
+ *  SENSOR_0 ~ SENSOR_7 */
+constexpr uint32_t CAN_STDID = SENSOR_0;
 
 /* Tire 0 is front
  * Tire 1 is left
@@ -98,8 +99,8 @@ void main_interrupt(void) {
 }
 
 void can_transmit(void) {
-	sken_system.canTransmit(CAN_1, CAN_ENC_STDID, send_enc_data, 8);
-	sken_system.canTransmit(CAN_1, CAN_LIMIT_STDID, send_limit_data, 8);
+	sken_system.canTransmit(CAN_1, CAN_STDID, send_enc_data, 8);
+	sken_system.canTransmit(CAN_1, CAN_STDID+8, send_limit_data, 8);
 }
 
 

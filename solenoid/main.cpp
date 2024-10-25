@@ -2,8 +2,8 @@
   ******************************************************************************
   * @file    main.cpp
   * @author  Tikuwa404
-  * @version V1.0
-  * @date    19-October-2024
+  * @version V2.1
+  * @date    25-October-2024
   * @brief   module_solenoid function.
   ******************************************************************************
 */
@@ -13,10 +13,15 @@
 #include "stm32f4xx_nucleo.h"
 #include "sken_library/include.h"
 
+enum {
+	SOLENOID_0=0x320,SOLENOID_1,SOLENOID_2,SOLENOID_3,SOLENOID_4,SOLENOID_5,SOLENOID_6,SOLENOID_7,SOLENOID_8,SOLENOID_9,SOLENOID_A,SOLENOID_B,SOLENOID_C,SOLENOID_D,SOLENOID_E,SOLENOID_F
+};
+
+
 /* Setting */
-/* Receiving can StdID
- *  0x320 ~ 0x32F  */
-constexpr uint32_t CAN_STDID = 0x320;
+/* Module ID
+ *  SOLENOID_0 ~ SOLENOID_F  */
+constexpr uint32_t CAN_STDID = SOLENOID_0;
 
 /* Pin is from the left */
 

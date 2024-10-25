@@ -2,8 +2,8 @@
   ******************************************************************************
   * @file    main.cpp
   * @author  Tikuwa404
-  * @version V1.0
-  * @date    19-October-2024
+  * @version V2.1
+  * @date    25-October-2024
   * @brief   module_servo function.
   ******************************************************************************
 */
@@ -13,15 +13,20 @@
 #include "stm32f4xx_nucleo.h"
 #include "sken_library/include.h"
 
+enum {
+	SERVO_0=0x310,SERVO_1,SERVO_2,SERVO_3,SERVO_4,SERVO_5,SERVO_6,SERVO_7,SERVO_8,SERVO_9,SERVO_A,SERVO_B,SERVO_C,SERVO_D,SERVO_E,SERVO_F
+};
+
+
 /* Setting */
 /* PWM width
  *  The number can be negative  */
 constexpr int SERVO_MIN_PWM[8] = {   0,   0,   0,   0,   0,   0,   0,   0};
 constexpr int SERVO_MAX_PWM[8] = { 100, 100, 100, 100, 100, 100, 100, 100};
 
-/* Receiving can StdID
- *  0x310 ~ 0x31F  */
-constexpr uint32_t CAN_STDID = 0x310;
+/* Module ID
+ *  SERVO_0 ~ SERVO_F  */
+constexpr uint32_t CAN_STDID = SERVO_0;
 
 /* Pin is from the left */
 

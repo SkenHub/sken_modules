@@ -1,142 +1,123 @@
 # sken_module:master
-モジュール基盤のマスター用プログラム。  
-CANはCAN_1(A12,A11)を用いる
+モジュール回路のマスター用プログラムの雛型とヘッダファイル  
+CANはCAN_1(A12,A11)を用いる  
+MDDの制御は別売りのsken_library/mddを使用すること
 
-## void main_interrupt(void)
-1[ms]毎に呼び出される関数。主な処理はここに記述する。（中にsken_system.canTransmit()を入れるとSTMStudioとの通信ができない。）
+## enum module_sending_name
+SERVO_0~SERVO_F と SOLENOID_0~SOLENOID_F の計32の列挙型
 
-## void can_transmit(void)
-10[ms]毎に呼び出される関数。sken_system.canTransmit()関数はここに記述する。
+## module_transmitter[32]
+モジュール回路に送信するためのクラスのインスタンス。添字の指定は`enum module_sending_name`で行う
 
-## uint8_t received_enc[8][8]
-0x100~0x107で受信した自己位置の情報が自動で格納される配列。  
-x、y、theta(度数法)が送られてくる。
-
-[例]  
-0x100で受信した自己位置が入った配列は`received_enc[0]`である。  
-
+## void module_transmitter[i].transmit(uint8_t* container)
+containerの先頭8つのデータを送信し、モジュールを制御する  
 [サンプルコード]  
-0x100の自己位置を受信し、変数`int16_t x, y, z`に展開する
-
+回路`SERVO_0`に配列`uint8_t send_data[8]`の指令を送信する
 ``` c++
 #include "stm32f4xx.h"
 #include "stm32f4xx_nucleo.h"
 #include "sken_library/include.h"
+#include "sken_module.hpp"
 
-CanData received_raw;
-uint8_t received_enc[8][8];
-uint8_t received_limit[8][8];
+uint8_t send_data[8] = {};
+
+void main_interrupt(void) {
+	/* Main code here */
+	module_transmitter[SERVO_0].transmit(send_data);
+	/* -------------- */
+}
+
+int main(void)
+{
+	sken_system.init();
+	sken_module_init();
+
+	/* Initialize here */
+
+	/* --------------- */
+
+	sken_system.addTimerInterruptFunc(main_interrupt, 0, 1);
+
+	while(true) {
+		sken_module_receive();
+	}
+}
+```
+
+## enum module_receiving_name
+SENSOR_0~SENSOR_7 の計8の列挙型
+
+## module_receiver[8]
+センサモジュール回路から受信するためのクラスのインスタンス。添字の指定は`enum module_receiving_name`で行う
+
+## void module_receiver[i].get_enc(int16_t* x, int16_t* y, int16_t* theta)
+受信した自己位置を変数x、y、thetaに格納する  
+[サンプルコード]  
+回路`SENSOR_0`から受信した自己位置を変数`int16_t x,y,theta`に格納する
+``` c++
+#include "stm32f4xx.h"
+#include "stm32f4xx_nucleo.h"
+#include "sken_library/include.h"
+#include "sken_module.hpp"
 
 int16_t x, y, theta;
 
 void main_interrupt(void) {
-    union{int16_t s16, uint8_t u8[2]} conv;
-    conv.u8[0] = received_enc[0][0];
-    conv.u8[1] = received_enc[0][1];
-    x = conv.s16;
-    conv.u8[0] = received_enc[0][2];
-    conv.u8[1] = received_enc[0][3];
-    y = conv.s16;
-    conv.u8[0] = received_enc[0][4];
-    conv.u8[1] = received_enc[0][5];
-    theta = conv.s16;
-}
-
-void can_transmit(void) {
+	/* Main code here */
+	module_receiver[SENSOR_0].get_enc(&x, &y, &theta);
+	/* -------------- */
 }
 
 int main(void)
 {
 	sken_system.init();
+	sken_module_init();
 
-    sw.init(C13, INPUT_PULLUP);
+	/* Initialize here */
 
-	sken_system.startCanCommunicate(A12, A11, CAN_1);
-	sken_system.addCanRceiveInterruptFunc(CAN_1, &received_raw);
+	/* --------------- */
+
 	sken_system.addTimerInterruptFunc(main_interrupt, 0, 1);
-	sken_system.addTimerInterruptFunc(can_transmit, 1, 10);
-    //以下省略
+
+	while(true) {
+		sken_module_receive();
+	}
+}
 ```
 
-## uint8_t received_limit[8][8]
-0x108~0x10Fで受信したリミットの情報が自動で格納される配列。  
-リミットが押されているなら1、押されていないなら0が格納される。  
-
-[例]  
-0x109で受信したリミットの情報が入った配列は`received_limit[1]`であり、その中の5番リミットの情報は`received_limit[1][5]`に格納されている。
-
-# サンプルコード
+## bool module_receiver[i].get_limit(int n)
+受信したリミットスイッチの情報の内、n番目のスイッチが押されているならtrueを、押されていないならfalseを返す。  
 [サンプルコード]  
-0x108のセンサーモジュールのリミット0番が押された時にLEDを点灯する
-
+回路`SENSOR_0`から0番リミットの情報を得る
 ``` c++
 #include "stm32f4xx.h"
 #include "stm32f4xx_nucleo.h"
 #include "sken_library/include.h"
+#include "sken_module.hpp"
 
-CanData received_raw;
-uint8_t received_enc[8][8];
-uint8_t received_limit[8][8];
-
-Gpio led;
 
 void main_interrupt(void) {
-    led.write(received_limit[0][0] ? HIGH : LOW);
-}
-
-void can_transmit(void) {
-
+	/* Main code here */
+	if (module_receiver[SENSOR_0].get_limit(0)) {
+		
+	}
+	/* -------------- */
 }
 
 int main(void)
 {
 	sken_system.init();
+	sken_module_init();
 
-    led.init(A5, OUTPUT);
+	/* Initialize here */
 
-	sken_system.startCanCommunicate(A12, A11, CAN_1);
-	sken_system.addCanRceiveInterruptFunc(CAN_1, &received_raw);
+	/* --------------- */
+
 	sken_system.addTimerInterruptFunc(main_interrupt, 0, 1);
-	sken_system.addTimerInterruptFunc(can_transmit, 1, 10);
-    //以下省略
-```
 
-[サンプルコード]  
-青ボタンが押された時0x320の電磁弁モジュールの0番の電磁弁を起動する
-
-``` c++
-#include "stm32f4xx.h"
-#include "stm32f4xx_nucleo.h"
-#include "sken_library/include.h"
-
-CanData received_raw;
-uint8_t received_enc[8][8];
-uint8_t received_limit[8][8];
-
-Gpio sw;
-uint8_t send_data[8] = {};
-
-void main_interrupt(void) {
-    if (sw.read()) {
-        send_data[0] = 0;
-    } else {
-        send_data[0] = 1;
-    }
+	while(true) {
+		sken_module_receive();
+	}
 }
 
-void can_transmit(void) {
-    sken_system.canTransmit(CAN_1, 0x320, send_data, 8);
-}
-
-int main(void)
-{
-	sken_system.init();
-
-    sw.init(C13, INPUT_PULLUP);
-
-	sken_system.startCanCommunicate(A12, A11, CAN_1);
-	sken_system.addCanRceiveInterruptFunc(CAN_1, &received_raw);
-	sken_system.addTimerInterruptFunc(main_interrupt, 0, 1);
-	sken_system.addTimerInterruptFunc(can_transmit, 1, 10);
-    //以下省略
 ```
