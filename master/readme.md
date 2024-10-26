@@ -4,7 +4,7 @@ CANはCAN_1(A12,A11)を用いる
 MDDの制御は別売りのsken_library/mddを使用すること
 
 ## enum module_sending_name
-SERVO_0~SERVO_F と SOLENOID_0~SOLENOID_F の計32の列挙型
+SERVO_0\~SERVO_F と SOLENOID_0\~SOLENOID_F の計32の列挙型
 
 ## module_transmitter[32]
 モジュール回路に送信するためのクラスのインスタンス。添字の指定は`enum module_sending_name`で行う
